@@ -80,6 +80,23 @@ int main(int argc, char* argv[])
 
             // read RGB triple from infile
             fread(&triple, sizeof(RGBTRIPLE), 1, inptr);
+            
+            // remove all red
+            if (triple.rgbtBlue == 0x00 && triple.rgbtGreen == 0x00 && triple.rgbtRed == 0xff)
+            {
+                triple.rgbtBlue = 0xff;
+                triple.rgbtGreen = 0xff;
+                triple.rgbtRed = 0xff;
+            }
+ /*
+            // darken the cyans
+            if (triple.rgbtBlue > 150 && triple.rgbtGreen == 0xff && triple.rgbtRed < 0xff)
+            {
+                triple.rgbtBlue /= 2;
+                triple.rgbtGreen /= 2;
+                triple.rgbtRed /= 2;
+            }
+*/
 
             // write RGB triple to outfile
             fwrite(&triple, sizeof(RGBTRIPLE), 1, outptr);
