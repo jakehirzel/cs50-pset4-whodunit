@@ -1,10 +1,10 @@
 /**
- * copy.c
+ * resize.c - branch of copy.c
  *
  * Computer Science 50
  * Problem Set 4
  *
- * Copies a BMP piece by piece, just because.
+ * Resize a BMP using a factor of 1 - 100.
  */
        
 #include <stdio.h>
@@ -15,15 +15,16 @@
 int main(int argc, char* argv[])
 {
     // ensure proper usage
-    if (argc != 3)
+    if (argc != 4)
     {
-        printf("Usage: ./copy infile outfile\n");
+        printf("Usage: ./resize factor infile outfile\n");
         return 1;
     }
 
-    // remember filenames
-    char* infile = argv[1];
-    char* outfile = argv[2];
+    // remember factor and filenames
+    int* factor = argv[1];
+    char* infile = argv[2];
+    char* outfile = argv[3];
 
     // open input file 
     FILE* inptr = fopen(infile, "r");
@@ -60,14 +61,30 @@ int main(int argc, char* argv[])
         return 4;
     }
 
-    // write outfile's BITMAPFILEHEADER
-    fwrite(&bf, sizeof(BITMAPFILEHEADER), 1, outptr);
+    // copy bf and bi into bf_mod & bi_mod to preserve original header values
+    BITMAPFILEHEADER bf_mod = bf;
+    BITMAPINFOHEADER bi_mod = bi;
 
-    // write outfile's BITMAPINFOHEADER
-    fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, outptr);
+    // change width & heght by factor
+    bi_mod.biWidth *= factor;
+    bi_mod.biHeight *= factor;
 
     // determine padding for scanlines
-    int padding =  (4 - (bi.biWidth * sizeof(RGBTRIPLE)) % 4) % 4;
+    int padding =  (4 - (bi_mod.biWidth * sizeof(RGBTRIPLE)) % 4) % 4;
+    
+    // set new biSizeImage
+    bi_mod.biSizeImage = ((bi_mod.biWidth * sizeof(RGBTRIPLE)) + padding) * bi_mod.biHeight;
+
+    // set new bfSize
+    bf_mod.bfSize = bi_mod.biSizeImage + 54;
+
+    // write outfile's BITMAPFILEHEADER
+    fwrite(&bf_mod, sizeof(BITMAPFILEHEADER), 1, outptr);
+
+    // write outfile's BITMAPINFOHEADER
+    fwrite(&bi_mod, sizeof(BITMAPINFOHEADER), 1, outptr);
+
+/* CODE SWEEP BELOW HERE */
 
     // iterate over infile's scanlines
     for (int i = 0, biHeight = abs(bi.biHeight); i < biHeight; i++)
