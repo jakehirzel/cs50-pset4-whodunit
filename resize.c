@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
     }
 
     // remember factor and filenames
-    int* factor = argv[1];
+    int factor = atoi(argv[1]);
     char* infile = argv[2];
     char* outfile = argv[3];
 
@@ -65,15 +65,18 @@ int main(int argc, char* argv[])
     BITMAPFILEHEADER bf_mod = bf;
     BITMAPINFOHEADER bi_mod = bi;
 
+    // get original file padding, if any
+    int padding =  (4 - (bi.biWidth * sizeof(RGBTRIPLE)) % 4) % 4;
+
     // change width & heght by factor
     bi_mod.biWidth *= factor;
-    bi_mod.biHeight *= factor;
+    bi_mod.biHeight *= factor ;
 
     // determine padding for scanlines
-    int padding =  (4 - (bi_mod.biWidth * sizeof(RGBTRIPLE)) % 4) % 4;
+    int padding_mod =  (4 - (bi_mod.biWidth * sizeof(RGBTRIPLE)) % 4) % 4;
     
     // set new biSizeImage
-    bi_mod.biSizeImage = ((bi_mod.biWidth * sizeof(RGBTRIPLE)) + padding) * bi_mod.biHeight;
+    bi_mod.biSizeImage = ((bi_mod.biWidth * sizeof(RGBTRIPLE)) + padding_mod) * abs(bi_mod.biHeight);
 
     // set new bfSize
     bf_mod.bfSize = bi_mod.biSizeImage + 54;
@@ -83,8 +86,6 @@ int main(int argc, char* argv[])
 
     // write outfile's BITMAPINFOHEADER
     fwrite(&bi_mod, sizeof(BITMAPINFOHEADER), 1, outptr);
-
-/* CODE SWEEP BELOW HERE */
 
     // iterate over infile's scanlines
     for (int i = 0, biHeight = abs(bi.biHeight); i < biHeight; i++)
@@ -98,15 +99,18 @@ int main(int argc, char* argv[])
             // read RGB triple from infile
             fread(&triple, sizeof(RGBTRIPLE), 1, inptr);
 
-            // write RGB triple to outfile
-            fwrite(&triple, sizeof(RGBTRIPLE), 1, outptr);
+            // write RGB triple to outfile factor times
+            for (int l = 0; l < factor; l++)
+            {
+                fwrite(&triple, sizeof(RGBTRIPLE), 1, outptr);
+            }
         }
 
         // skip over padding, if any
         fseek(inptr, padding, SEEK_CUR);
 
         // then add it back (to demonstrate how)
-        for (int k = 0; k < padding; k++)
+        for (int k = 0; k < padding_mod; k++)
         {
             fputc(0x00, outptr);
         }
