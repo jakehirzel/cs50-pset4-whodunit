@@ -68,11 +68,14 @@ int main(int argc, char* argv[])
     // get original file padding, if any
     int padding =  (4 - (bi.biWidth * sizeof(RGBTRIPLE)) % 4) % 4;
 
-    // change width & heght by factor
+    // save original scanline "width" in number of bytes
+    int scan_bytes = padding + bi.biWidth * sizeof(RGBTRIPLE);
+
+    // change new width & heght by factor
     bi_mod.biWidth *= factor;
     bi_mod.biHeight *= factor ;
 
-    // determine padding for scanlines
+    // determine new padding for scanlines
     int padding_mod =  (4 - (bi_mod.biWidth * sizeof(RGBTRIPLE)) % 4) % 4;
     
     // set new biSizeImage
@@ -114,6 +117,8 @@ int main(int argc, char* argv[])
         {
             fputc(0x00, outptr);
         }
+        
+        // if factor > 1, fseek back scan_bytes and repeat the above factor times
     }
 
     // close infile
