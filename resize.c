@@ -93,32 +93,41 @@ int main(int argc, char* argv[])
     // iterate over infile's scanlines
     for (int i = 0, biHeight = abs(bi.biHeight); i < biHeight; i++)
     {
-        // iterate over pixels in scanline
-        for (int j = 0; j < bi.biWidth; j++)
+        // loop to repeat going over each scanline factor times
+        for (int m = 0; m < factor; m++)
         {
-            // temporary storage
-            RGBTRIPLE triple;
-
-            // read RGB triple from infile
-            fread(&triple, sizeof(RGBTRIPLE), 1, inptr);
-
-            // write RGB triple to outfile factor times
-            for (int l = 0; l < factor; l++)
+            // iterate over pixels in scanline
+            for (int j = 0; j < bi.biWidth; j++)
             {
-                fwrite(&triple, sizeof(RGBTRIPLE), 1, outptr);
+                // temporary storage
+                RGBTRIPLE triple;
+    
+                // read RGB triple from infile
+                fread(&triple, sizeof(RGBTRIPLE), 1, inptr);
+    
+                // write RGB triple to outfile factor times
+                for (int l = 0; l < factor; l++)
+                {
+                    fwrite(&triple, sizeof(RGBTRIPLE), 1, outptr);
+                }
             }
+    
+            // skip over padding, if any
+            fseek(inptr, padding, SEEK_CUR);
+    
+            // then add it back (to demonstrate how)
+            for (int k = 0; k < padding_mod; k++)
+            {
+                fputc(0x00, outptr);
+            }
+            
+            // check if m < factor - 1 and fseek scan_bytes back if it is
+            if (m < factor - 1)
+            {
+                fseek(inptr, scan_bytes * -1, SEEK_CUR);
+            }
+            
         }
-
-        // skip over padding, if any
-        fseek(inptr, padding, SEEK_CUR);
-
-        // then add it back (to demonstrate how)
-        for (int k = 0; k < padding_mod; k++)
-        {
-            fputc(0x00, outptr);
-        }
-        
-        // if factor > 1, fseek back scan_bytes and repeat the above factor times
     }
 
     // close infile
